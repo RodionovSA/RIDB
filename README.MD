@@ -16,7 +16,8 @@ A lightweight Python repository for storing and managing a custom refractive ind
 Clone the repository and install dependencies:
 
     git clone https://github.com/RodionovSA/RIDB.git
-    pip install .
+    cd RIDB
+    pip install -e .
 
 ## Usage
     import numpy as np
