@@ -1,9 +1,9 @@
-# RIDB
+# RIDB - Refractive Index Database
 
 A lightweight Python repository for storing and managing a custom refractive index database. 
 
 ## Features
-- Cus†om refractive index database for deposited and measured with ellipsometry thin films
+- Custom refractive index database for deposited and measured with ellipsometry thin films
 - Contains methods to search materials, get refractive index, get epsilon, and etc. 
 - Contains Lorentz model parameters for FDTD
 
@@ -15,7 +15,7 @@ A lightweight Python repository for storing and managing a custom refractive ind
 ## Installation
 Clone the repository and install dependencies:
 
-git clone <REPO_URL>
+git clone https://github.com/RodionovSA/RIDB.git
 pip install .
 
 ## Usage
