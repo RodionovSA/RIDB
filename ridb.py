@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 from dataclasses import dataclass
 
-from units_conv import convert_spectral
+from utils import convert_spectral, lorentzfunc
 
 @dataclass
 class Material:
@@ -51,15 +51,98 @@ class Material:
         n = self.n(wvl, units)
         return n**2
     
+    def epsilon_lorentz(self, wvl: np.ndarray, units: str = 'nm'):
+        '''
+        Get complex permittivity (dielectric function) ε = (n+ik)^2 at specified wavelengths
+        using Lorentzian fit parameters from metadata.
+        '''
+        if 'lorentz_params' not in self.metadata.get('data', {}):
+            raise ValueError(f"Material '{self.name}' does not have Lorentzian fit parameters.")
+
+        wvl_conv = convert_spectral(wvl, units, '1/um')      # convert input wavelength to base units
+        rev = wvl_conv[0] > wvl_conv[-1]           # remember if user asked for descending
+        if rev:
+            wvl_conv = wvl_conv[::-1]
+
+        parameters = []
+        for name, value in self.metadata['data']['lorentz_params']['lorentzians'].items():
+            parameters.append(np.array(list(value)).flatten())
+            
+        p = np.concatenate(parameters)
+        eps_inf = self.metadata['data']['lorentz_params']['eps_inf']
+        
+        eps_fit = lorentzfunc(p, wvl_conv) + eps_inf  #calculate fitted epsilon
+         
+        if rev:                                    # restore original order
+            eps_fit = eps_fit[::-1]
+            
+        return eps_fit
+    
+    def n_lorentz(self, wvl: np.ndarray, units: str = 'nm'):
+        '''
+        Get complex refractive index n+ik at specified wavelengths
+        using Lorentzian fit parameters from metadata.
+        '''
+        eps = self.epsilon_lorentz(wvl, units)
+        n = np.sqrt(eps)
+        return n
+    
     def convert_to(self, x, target_units: str):
         '''Convert input x (wavelength/frequency/energy) to the base units of the material data.'''
         cols = self.metadata['data']['columns']         # e.g. ['wl_nm','n','k']
         base_q = cols[0]                                 # first quantity (wavelength/freq/energy)
         base_units = self.metadata['data']['units'][base_q]  # e.g. 'nm'
         return convert_spectral(x, target_units, base_units)
+    
+    def to_meep(self):
+        '''Convert Lorentzian fit parameters to a Meep Medium object.'''
+        #Try to import meep only when this function is called
+        try:
+            import meep as mp
+        except ImportError:
+            raise ImportError("meep library is not installed. Please install it to use this feature.")
         
+        # Check if Lorentzian parameters are available
+        if 'lorentz_params' not in self.metadata.get('data', {}):
+            raise ValueError(f"Material '{self.name}' does not have Lorentzian fit parameters.")
         
+        parameters = []
+        for name, value in self.metadata['data']['lorentz_params']['lorentzians'].items():
+            parameters.append(np.array(list(value)).flatten())
+            
+        p = np.concatenate(parameters)
+        eps_inf = self.metadata['data']['lorentz_params']['eps_inf']
+        
+        num_lorentzians = len(p) // 3
+        
+        # Define a `Medium` class object using the optimal fitting parameters.
+        E_susceptibilities = []
 
+        for n in range(num_lorentzians):
+            mymaterial_freq = p[3 * n + 1]
+            mymaterial_gamma = p[3 * n + 2]
+
+            if mymaterial_freq == 0:
+                mymaterial_sigma = p[3 * n + 0]
+                E_susceptibilities.append(
+                    mp.DrudeSusceptibility(
+                        frequency=1.0, gamma=mymaterial_gamma, sigma=mymaterial_sigma
+                    )
+                )
+            else:
+                mymaterial_sigma = p[3 * n + 0] / mymaterial_freq**2
+                E_susceptibilities.append(
+                    mp.LorentzianSusceptibility(
+                        frequency=mymaterial_freq,
+                        gamma=mymaterial_gamma,
+                        sigma=mymaterial_sigma,
+                    )
+                )
+
+        mymaterial = mp.Medium(epsilon=eps_inf, E_susceptibilities=E_susceptibilities)
+        
+        return mymaterial
+        
 class RIDB:
     def __init__(self, folder="materials"):
         self.folder = Path(folder)

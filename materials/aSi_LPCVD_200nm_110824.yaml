@@ -1,0 +1,23 @@
+name: aSi_LPCVD_200nm_110824
+formula: aSi
+source: LCPVD deposited amorphous Si. Properties of this film are closer to polycrystalline Si.
+  Fitting of ellipsometry data with amorphous model.
+data:
+  file: aSi_LPCVD_200nm_110824.npy
+  columns: [wvl, n, k]
+  shape: [161, 3]
+  dtype: float32
+  units:
+    wvl: nm
+  lorentz_params:
+    range: [380, 820]
+    eps_inf: 2.5
+    lorentzians:
+      l1: [30.52331066, 3.25301763, 0.0]
+      l2: [2.72348979, 2.32989102, 0.46227726]
+      l3: [16.68448280, 2.88080105, 0.01202802]
+      l4: [0.62277151, 2.00017059, 0.43185986]
+      l5: [33.60171951, 3.33552665, 0.0]
+      l6: [20.65153868, 5.18657775, 0.0]
+      l7: [4.40729732, 2.54754851, 0.31344620]
+      l8: [2.02155165, 2.64195569, 0.11340009]

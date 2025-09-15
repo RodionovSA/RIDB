@@ -9,3 +9,10 @@ data:
   dtype: float32
   units:
     wvl: nm
+  lorentz_params:
+    range: [380, 820]
+    eps_inf: 2.5
+    lorentzians:
+      l1: [7.70000515, 3.26445901, 0.0736138]
+      l2: [24.29262032, 4.66556423, 0.59596654]
+      

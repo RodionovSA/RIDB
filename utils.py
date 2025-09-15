@@ -7,7 +7,7 @@ e = 1.602_176_634e-19           # C (J/eV)
 
 # Unit scales
 _WL = {'A':1e-10, 'nm':1e-9, 'um':1e-6, 'cm':1e-2, 'm':1.0}
-_FR = {'Hz':1.0, 'THz':1e12}
+_FR = {'Hz':1.0, 'THz':1e12, '1/um': c * 1e6}
 _EN = {'eV':1.0}
 
 def convert_spectral(x, from_u: str, to_u: str):
@@ -57,3 +57,18 @@ def convert_spectral(x, from_u: str, to_u: str):
         return nu_Hz / _FR[to_u]
 
     raise ValueError(f"Unsupported units: {from_u} → {to_u}")
+
+def lorentzfunc(p: np.ndarray, x: np.ndarray) -> np.ndarray:
+    """
+    Returns the complex ε profile given a set of Lorentzian parameters p
+    (σ_0, ω_0, γ_0, σ_1, ω_1, γ_1, ...) for a set of frequencies x in 1/um units.
+    (From MEEP)
+    """
+    N = len(p) // 3
+    y = np.zeros(len(x))
+    for n in range(N):
+        A_n = p[3 * n + 0]
+        x_n = p[3 * n + 1]
+        g_n = p[3 * n + 2]
+        y = y + A_n / (np.square(x_n) - np.square(x) - 1j * x * g_n)
+    return y
