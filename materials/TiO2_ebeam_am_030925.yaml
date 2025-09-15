@@ -1,0 +1,11 @@
+name: TiO2_ebeam_am_030925
+formula: TiO2
+source: E-beam evaporated thin film.
+  Fitting of ellipsometry data with amorphous model.
+data:
+  file: TiO2_ebeam_am_030925.npy
+  columns: [E, n, k]
+  shape: [91, 3]
+  dtype: float32
+  units:
+    E: eV

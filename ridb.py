@@ -1,0 +1,128 @@
+#Refractive Index Database (RIDB) Python API
+import yaml, difflib
+import numpy as np
+from pathlib import Path
+from dataclasses import dataclass
+
+from units_conv import convert_spectral
+
+@dataclass
+class Material:
+    '''Class to handle material data from RIDB.'''
+    name: str
+    
+    def __post_init__(self):
+        self.metadata = self._get_metadata()
+        self.rawdata = self._get_rawdata()
+        
+    def _get_metadata(self):
+        # Load metadata from a YAML file
+        with open(f'materials/{self.name}.yaml', 'r') as file:
+            return yaml.safe_load(file)
+        
+    def _get_rawdata(self):
+        # Load raw data from a NumPy file
+        return np.load(f'materials/{self.name}.npy')
+    
+    def n(self, wvl: np.ndarray, units: str = 'nm'):
+        '''
+        Get complex refractive index n+ik at specified wavelengths.
+        '''
+        wvl_conv = self.convert_to(wvl, units)      # convert input wavelength to base units
+        rev = wvl_conv[0] > wvl_conv[-1]           # remember if user asked for descending
+        if rev:
+            wvl_conv = wvl_conv[::-1]
+            rawdata = self.rawdata[::-1]
+        else:
+            rawdata = self.rawdata
+
+        n = np.interp(wvl_conv, rawdata[:,0], rawdata[:,1])
+        k = np.interp(wvl_conv, rawdata[:,0], rawdata[:,2])
+        
+        if rev:                                    # restore original order
+            n = n[::-1]; k = k[::-1]
+            
+        return n + 1j*k
+    
+    def epsilon(self, wvl: np.ndarray, units: str = 'nm'):
+        '''
+        Get complex permittivity (dielectric function) ε = (n+ik)^2 at specified wavelengths.
+        '''
+        n = self.n(wvl, units)
+        return n**2
+    
+    def convert_to(self, x, target_units: str):
+        '''Convert input x (wavelength/frequency/energy) to the base units of the material data.'''
+        cols = self.metadata['data']['columns']         # e.g. ['wl_nm','n','k']
+        base_q = cols[0]                                 # first quantity (wavelength/freq/energy)
+        base_units = self.metadata['data']['units'][base_q]  # e.g. 'nm'
+        return convert_spectral(x, target_units, base_units)
+        
+        
+
+class RIDB:
+    def __init__(self, folder="materials"):
+        self.folder = Path(folder)
+        self._recs = []
+        self._by_name = {}
+        self._by_file = {}
+        self._build_index()
+
+    def _build_index(self):
+        self._recs.clear()
+        for p in self.folder.glob("*.yaml"):
+            try:
+                meta = yaml.safe_load(p.read_text()) or {}
+            except Exception:
+                meta = {}
+            rec = {
+                "file": p.name,
+                "path": str(p),
+                "name": meta.get("name", "") or p.stem,
+                "formula": meta.get("formula", "") or "",
+                "source": meta.get("source", "") or "",
+            }
+            self._recs.append(rec)
+        self._by_name = {r["name"]: r for r in self._recs}
+        self._by_file = {r["file"]: r for r in self._recs}
+
+    @property
+    def materials(self):
+        return sorted(r["name"] for r in self._recs)
+    
+    def get_material(self, name: str):
+        if name in self.materials:
+            return Material(name)
+        else:
+            raise ValueError(f"Material '{name}' not found in the database.")
+        
+    def find_materials(self, query: str, topk: int = 15):
+        terms, filters = [], {}
+        for tok in query.split():
+            if ":" in tok:
+                k, v = tok.split(":", 1)
+                filters[k.lower()] = v.lower()
+            else:
+                terms.append(tok.lower())
+
+        def score(rec):
+            fields = [rec["name"], 
+                      rec["formula"], 
+                      rec["source"], 
+                      rec["file"]]
+            txt = " | ".join(fields).lower()
+
+            # hard filters
+            for k, v in filters.items():
+                if k in rec and v not in str(rec[k]).lower():
+                    return -1.0
+
+            sub = sum(t in txt for t in terms)
+            fuzz = max(difflib.SequenceMatcher(None, " ".join(terms), f.lower()).ratio()
+                       for f in fields) if terms else 0.0
+            return sub*2 + fuzz
+
+        scored = [(score(r), r) for r in self._recs]
+        scored = [x for x in scored if x[0] >= 0]
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [r["name"] for _, r in scored[:topk]]

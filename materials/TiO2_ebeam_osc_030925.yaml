@@ -1,0 +1,11 @@
+name: TiO2_ebeam_osc_030925
+formula: TiO2
+source: E-beam evaporated thin film. 
+  Fitting of ellipsometry data with oscillator model.
+data:
+  file: TiO2_ebeam_osc_030925.npy
+  columns: [wvl, n, k]
+  shape: [91, 3]
+  dtype: float32
+  units:
+    wvl: nm

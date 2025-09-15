@@ -1,0 +1,12 @@
+name: TiO2_sput_am_030925
+formula: TiO2
+source: AJA sputtering of Ti target in 4 sccm O2 at 300W DC power, /
+  with post-annealing at 250C for 5 min in 1000 sccm O2. 
+  Fitting of ellipsometry data with amorphous model.
+data:
+  file: TiO2_sput_am_030925.npy
+  columns: [wvl, n, k]
+  shape: [91, 3]
+  dtype: float32
+  units:
+    wvl: nm
