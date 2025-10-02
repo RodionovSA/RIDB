@@ -2,28 +2,57 @@
 import yaml, difflib
 import numpy as np
 from pathlib import Path
-from dataclasses import dataclass
-from importlib.resources import files as pkg_files
+from dataclasses import dataclass, field
+from importlib.resources import files as pkg_files, path
+from typing import Any, Dict, Optional
 
 from .utils import convert_spectral, lorentzfunc
 
 @dataclass
 class Material:
     '''Class to handle material data from RIDB.'''
-    name: str
+    path: Path                              # path to the YAML file
     
+    # filled in after init
+    metadata: Dict[str, Any] = field(init=False)
+    rawdata: np.ndarray = field(init=False)
+
     def __post_init__(self):
-        self.metadata = self._get_metadata()
-        self.rawdata = self._get_rawdata()
-        
-    def _get_metadata(self):
-        # Load metadata from a YAML file
-        with open(f'materials/{self.name}.yaml', 'r') as file:
-            return yaml.safe_load(file)
-        
-    def _get_rawdata(self):
-        # Load raw data from a NumPy file
-        return np.load(f'materials/{self.name}.npy')
+        # Normalize/resolve the YAML path
+        self.path = Path(self.path)
+        if not self.path.suffix:
+            # allow passing a stem; assume YAML
+            self.path = self.path.with_suffix(".yaml")
+        if not self.path.exists():
+            raise FileNotFoundError(f"YAML not found: {self.path}")
+
+        # Derive name from file stem if not provided
+        self.name = self.path.stem
+
+        # Load metadata and raw data
+        self.metadata = self._get_metadata(self.path)
+        self.rawdata = self._get_rawdata(self.path)
+
+    @staticmethod
+    def _get_metadata(yaml_path: Path):
+        with yaml_path.open("r", encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+
+    @staticmethod
+    def _raw_path_for(yaml_path: Path) -> Path:
+        """Replace .yaml/.yml with .npy in the same folder."""
+        if yaml_path.suffix.lower() in {".yaml", ".yml"}:
+            return yaml_path.with_suffix(".npy")
+        # fallback if someone passed a weird extension
+        return yaml_path.parent / (yaml_path.stem + ".npy")
+
+    def _get_rawdata(self, yaml_path: Path) -> np.ndarray:
+        npy_path = self._raw_path_for(yaml_path)
+        if not npy_path.exists():
+            raise FileNotFoundError(
+                f"Raw data .npy not found next to YAML:\n  YAML: {yaml_path}\n  NPY : {npy_path}"
+            )
+        return np.load(npy_path)  # add mmap_mode="r" if files are large
     
     def n(self, wvl: np.ndarray, units: str = 'nm'):
         '''
@@ -143,6 +172,12 @@ class Material:
         mymaterial = mp.Medium(epsilon=eps_inf, E_susceptibilities=E_susceptibilities)
         
         return mymaterial
+    
+    def __repr__(self) -> str:
+        return f"Material({self.name!r})"   # shown in REPL, lists, etc.
+
+    def __str__(self) -> str:
+        return self.name                    # shown by print(obj)
         
 class RIDB:
     def __init__(self, folder: str | Path | None = None):
@@ -154,6 +189,7 @@ class RIDB:
 
         if not self.folder.exists():
             raise FileNotFoundError(f"RIDB materials folder not found: {self.folder}")
+        
         self._recs = []
         self._by_name = {}
         self._by_file = {}
@@ -183,7 +219,7 @@ class RIDB:
     
     def get_material(self, name: str):
         if name in self.materials:
-            return Material(name)
+            return Material(self._by_name[name]["path"])
         else:
             raise ValueError(f"Material '{name}' not found in the database.")
         
@@ -217,3 +253,5 @@ class RIDB:
         scored = [x for x in scored if x[0] >= 0]
         scored.sort(key=lambda x: x[0], reverse=True)
         return [r["name"] for _, r in scored[:topk]]
+    
+    
