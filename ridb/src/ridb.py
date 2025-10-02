@@ -3,6 +3,7 @@ import yaml, difflib
 import numpy as np
 from pathlib import Path
 from dataclasses import dataclass
+from importlib.resources import files as pkg_files
 
 from .utils import convert_spectral, lorentzfunc
 
@@ -144,8 +145,10 @@ class Material:
         return mymaterial
         
 class RIDB:
-    def __init__(self, folder="ridb/materials"):
-        self.folder = Path(folder)
+    def __init__(self, folder: str | Path | None = None):
+        self.folder = Path(folder) if folder is not None else pkg_files(__package__).joinpath("materials")
+        if not self.folder.exists():
+            raise FileNotFoundError(f"RIDB materials folder not found: {self.folder}")
         self._recs = []
         self._by_name = {}
         self._by_file = {}
