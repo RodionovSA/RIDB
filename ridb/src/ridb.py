@@ -146,7 +146,12 @@ class Material:
         
 class RIDB:
     def __init__(self, folder: str | Path | None = None):
-        self.folder = Path(folder) if folder is not None else pkg_files(__package__).joinpath("materials")
+        if folder is None:
+            # Resolve from the top-level package, not the subpackage:
+            self.folder = pkg_files("ridb").joinpath("materials")
+        else:
+            self.folder = Path(folder)
+
         if not self.folder.exists():
             raise FileNotFoundError(f"RIDB materials folder not found: {self.folder}")
         self._recs = []
