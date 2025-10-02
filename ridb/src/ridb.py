@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 from dataclasses import dataclass
 
-from utils import convert_spectral, lorentzfunc
+from .utils import convert_spectral, lorentzfunc
 
 @dataclass
 class Material:
@@ -144,7 +144,7 @@ class Material:
         return mymaterial
         
 class RIDB:
-    def __init__(self, folder="materials"):
+    def __init__(self, folder="ridb/materials"):
         self.folder = Path(folder)
         self._recs = []
         self._by_name = {}
