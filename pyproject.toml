@@ -19,8 +19,9 @@ dependencies = [
 Homepage = "https://github.com/RodionovSA/RIDB"
 
 # If you use a src/ layout, keep this. If your package is top-level, remove this block.
-[tool.setuptools]
-packages = ["ridb"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ridb*"]
 
 # Include data files shipped inside the ridb package
 [tool.setuptools.package-data]
