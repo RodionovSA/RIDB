@@ -1,0 +1,20 @@
+name: Si3N4_LPCVD_high_stress_010925
+formula: Si3N4
+source: LCPVD deposited amorphous Si3N4 (stoichiometric). 
+        Standart LPCVD recipe that cause high stress for films on glass substrates.
+        Fitting of ellipsometry data with amorphous model.
+data:
+  file: Si3N4_LPCVD_high_stress_010925.npy
+  columns: [wvl, n, k]
+  shape: [100, 3]
+  dtype: float32
+  units:
+    wvl: nm
+  lorentz_params:
+    range: [350, 850]
+    eps_inf: 2.5
+    lorentzians:
+      l1: [22.6785, 5.5440, 0.0000]
+      l2: [12.0005, 5.5428, 0.0000]
+      l3: [0.0092, 2.5645, 0.4060]
+      l4: [11.7680, 5.5438, 0.0000]

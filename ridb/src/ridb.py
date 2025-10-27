@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 from dataclasses import dataclass, field
 from importlib.resources import files as pkg_files, path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from .utils import convert_spectral, lorentzfunc
 
@@ -54,10 +54,13 @@ class Material:
             )
         return np.load(npy_path)  # add mmap_mode="r" if files are large
     
-    def n(self, wvl: np.ndarray, units: str = 'nm'):
+    def n(self, wvl: Union[np.ndarray, float, int], units: str = 'nm'):
         '''
         Get complex refractive index n+ik at specified wavelengths.
         '''
+        if isinstance(wvl, (float, int)):
+            wvl = np.array([wvl])
+            
         wvl_conv = self.convert_to(wvl, units)      # convert input wavelength to base units
         rev = wvl_conv[0] > wvl_conv[-1]           # remember if user asked for descending
         if rev:
@@ -73,8 +76,8 @@ class Material:
             n = n[::-1]; k = k[::-1]
             
         return n + 1j*k
-    
-    def epsilon(self, wvl: np.ndarray, units: str = 'nm'):
+
+    def epsilon(self, wvl: Union[np.ndarray, float, int], units: str = 'nm'):
         '''
         Get complex permittivity (dielectric function) ε = (n+ik)^2 at specified wavelengths.
         '''
@@ -88,6 +91,9 @@ class Material:
         '''
         if 'lorentz_params' not in self.metadata.get('data', {}):
             raise ValueError(f"Material '{self.name}' does not have Lorentzian fit parameters.")
+        
+        if isinstance(wvl, (float, int)):
+            wvl = np.array([wvl])
 
         wvl_conv = convert_spectral(wvl, units, '1/um')      # convert input wavelength to base units
         rev = wvl_conv[0] > wvl_conv[-1]           # remember if user asked for descending
