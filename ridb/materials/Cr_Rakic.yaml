@@ -1,0 +1,18 @@
+name: Cr_Rakic
+formula: Cr
+source: RefractiveIndex.info
+data:
+  file: Cr_Rakic.npy
+  columns: [wvl, n, k]
+  shape: [126, 3]
+  dtype: float32
+  units:
+    wvl: nm
+  lorentz_params:
+    range: [250, 1500]
+    eps_inf: 1.0
+    lorentzians:
+      l1: [23.47864054,0.73540749,1.84162545]
+      l2: [76.73676375,7.56862378,2.87207062]
+      l3: [79.79927862,1.60735149,2.12152674]
+      l4: [15.72556677,0.00000000,0.10115306]

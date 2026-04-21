@@ -1,0 +1,18 @@
+name: Pt_Rakic
+formula: Pt
+source: RefractiveIndex.info
+data:
+  file: Pt_Rakic.npy
+  columns: [wvl, n, k]
+  shape: [96, 3]
+  dtype: float32
+  units:
+    wvl: nm
+  lorentz_params:
+    range: [250, 1200]
+    eps_inf: 1.0
+    lorentzians:
+      l1: [139.96649944,6.32634181,4.50034002]
+      l2: [68.95350512,0.81941392,2.15396638]
+      l3: [9.48314596,2.69894972,1.91228298]
+      l4: [24.80072856,0.00000000,0.34125628]

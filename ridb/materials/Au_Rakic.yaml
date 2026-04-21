@@ -1,0 +1,18 @@
+name: Au_Rakic
+formula: Au
+source: RefractiveIndex.info
+data:
+  file: Au_Rakic.npy
+  columns: [wvl, n, k]
+  shape: [96, 3]
+  dtype: float32
+  units:
+    wvl: nm
+  lorentz_params:
+    range: [250, 1200]
+    eps_inf: 1.0
+    lorentzians:
+      l1: [284.13898577,11.53972753,0.00000000]
+      l2: [42.64155610,0.00000000,0.06008333]
+      l3: [29.09551429,3.48570114,1.82199261]
+      l4: [4.97746666,2.41175535,0.79853424]

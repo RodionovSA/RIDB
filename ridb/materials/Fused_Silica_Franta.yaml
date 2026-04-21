@@ -1,0 +1,18 @@
+name: Fused_Silica_Franta
+formula: SiO2
+source: RefractiveIndex.info
+data:
+  file: Fused_Silica_Franta.npy
+  columns: [wvl, n, k]
+  shape: [101, 3]
+  dtype: float32
+  units:
+    wvl: nm
+  lorentz_params:
+    range: [200, 1200]
+    eps_inf: 1.6
+    lorentzians:
+      l1: [15.18105916,8.21783560,0.00000000]
+      l2: [16.46482190,8.12106406,0.00000009]
+      l3: [2.52636536,8.40247648,0.00000000]
+      l4: [0.01354340,0.00000000,0.00000000]

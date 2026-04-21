@@ -1,0 +1,18 @@
+name: Al_Rakic
+formula: Al
+source: RefractiveIndex.info
+data:
+  file: Al_Rakic.npy
+  columns: [wvl, n, k]
+  shape: [281, 3]
+  dtype: float32
+  units:
+    wvl: nm
+  lorentz_params:
+    range: [200, 3000]
+    eps_inf: 1.0
+    lorentzians:
+      l1: [25.65807169,1.50149656,1.19605326]
+      l2: [56.17734608,0.00000000,0.18459635]
+      l3: [53.27505416,0.00000000,0.02719402]
+      l4: [8.09210851,1.24686267,0.26522525]

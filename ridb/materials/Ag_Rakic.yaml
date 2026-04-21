@@ -1,0 +1,18 @@
+name: Ag_Rakic
+formula: Ag
+source: RefractiveIndex.info
+data:
+  file: Ag_Rakic.npy
+  columns: [wvl, n, k]
+  shape: [276, 3]
+  dtype: float32
+  units:
+    wvl: nm
+  lorentz_params:
+    range: [250, 3000]
+    eps_inf: 1.0
+    lorentzians:
+      l1: [6.78529410,3.61514150,0.38037835]
+      l2: [44.60141877,0.00000000,0.03864552]
+      l3: [138.51220459,8.60846400,0.00000000]
+      l4: [4.32984779,0.67212959,3.89789777]
